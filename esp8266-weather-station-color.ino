@@ -186,7 +186,6 @@ void setup() {
   // The LED pin needs to set HIGH
   // Use this pin to save energy
   // Turn on the background LED
-  Serial.println(TFT_LED);
   pinMode(TFT_LED, OUTPUT);
   digitalWrite(TFT_LED, HIGH);    // HIGH to Turn on;
 
