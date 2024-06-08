@@ -120,6 +120,7 @@ void loadPropertiesFromSpiffs();
 // how many different screens do we have?
 int screenCount = 5;
 long lastDownloadUpdate = millis();
+long lastScreenUpdate = millis();
 
 uint8_t screen = 0;
 // divide screen into 4 quadrants "< top", "> bottom", " < middle "," > middle "
@@ -135,18 +136,17 @@ void connectWifi() {
   if (WiFi.status() == WL_CONNECTED) return;
   //Manual Wifi
   Serial.printf("Connecting to WiFi %s/%s", WIFI_SSID.c_str(), WIFI_PASS.c_str());
-  WiFi.disconnect();
+  // WiFi.disconnect();
   WiFi.mode(WIFI_STA);
   WiFi.hostname(WIFI_HOSTNAME);
   WiFi.begin(WIFI_SSID.c_str(), WIFI_PASS.c_str());
   int i = 0;
   while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
     if (i > 80) i = 0;
     drawProgress(i, "Connecting to WiFi '" + String(WIFI_SSID.c_str()) + "'");
     i += 10;
     Serial.print(".");
-    delay(500);
-    yield();
   }
   drawProgress(100, "Connected to WiFi '" + String(WIFI_SSID.c_str()) + "'");
   Serial.println("connected.");
@@ -164,6 +164,7 @@ void initTime() {
   configTime(TIMEZONE.c_str(), NTP_SERVERS);
   int i = 1;
   while ((now = time(nullptr)) < NTP_MIN_VALID_EPOCH) {
+    if (i > 80) i = 0;
     drawProgress(i * 10, "Updating time...");
     Serial.print(".");
     delay(300);
@@ -276,8 +277,7 @@ uint8_t currentTouchPoint = 0;
 
 void loop() {
   static bool asleep = false;	//  asleep used to stop screen change after touch for wake-up
-  gfx.fillBuffer(MINI_BLACK);
-
+  
   /* Break up the screen into 4 sections a touch in section:
    * - Top changes the time format
    * - Left back one page
@@ -292,37 +292,50 @@ void loop() {
   //   }
   // } // isTouched()
 
+  if (millis() - lastScreenUpdate > 1000 * SCREEN_UPDATE_INTERVAL_SECS) {
+    updateScreen();
+    lastScreenUpdate = millis();
+  }
+
+  // Check if we should update weather information
+  if (millis() - lastDownloadUpdate > 1000 * UPDATE_INTERVAL_SECS) {
+    updateData();
+    lastDownloadUpdate = millis();
+  }
+
+  delay(1000);
+  yield();
+}
+
+void updateScreen() {
+  Serial.println("Updating screen.");
   if (screen == 0) {
-      drawTime();
+    gfx.fillBuffer(MINI_BLACK);
 
-      drawWifiQuality();
-      // int remainingTimeBudget = carousel.update();
-      // if (remainingTimeBudget > 0) {
-      //   // You can do some work here
-      //   // Don't do stuff if you are below your
-      //   // time budget.
-      //   delay(remainingTimeBudget);
-      // }
-      drawCurrentWeather();
-      drawForecast1();
-      drawForecast2();
-      drawAstronomy();
-    } else if (screen == 1) {
-      drawCurrentWeatherDetail();
-    } else if (screen == 2) {
-      drawForecastTable(0);
-    } else if (screen == 3) {
-      drawForecastTable(4);
-    } else if (screen == 4) {
-      drawAbout();
-    }
-    gfx.commit();
+    drawTime();
 
-    // Check if we should update weather information
-    if (millis() - lastDownloadUpdate > 1000 * UPDATE_INTERVAL_SECS) {
-      updateData();
-      lastDownloadUpdate = millis();
-    }
+    drawWifiQuality();
+    // int remainingTimeBudget = carousel.update();
+    // if (remainingTimeBudget > 0) {
+    //   // You can do some work here
+    //   // Don't do stuff if you are below your
+    //   // time budget.
+    //   delay(remainingTimeBudget);
+    // }
+    drawCurrentWeather();
+    drawForecast1();
+    drawForecast2();
+    drawAstronomy();
+  } else if (screen == 1) {
+    drawCurrentWeatherDetail();
+  } else if (screen == 2) {
+    drawForecastTable(0);
+  } else if (screen == 3) {
+    drawForecastTable(4);
+  } else if (screen == 4) {
+    drawAbout();
+  }
+  gfx.commit();
 }
 
 /*
