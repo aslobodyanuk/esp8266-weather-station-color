@@ -89,6 +89,7 @@ CalibrationCallback calibration = &calibrationCallback;
 
 OpenWeatherMapCurrentData currentWeather;
 OpenWeatherMapForecastData forecasts[MAX_FORECASTS];
+OpenWeatherMapForecastData updated_forecasts[MAX_FORECASTS];
 
 SunMoonCalc::Moon moonData;
 
@@ -155,6 +156,7 @@ void connectWifi() {
 }
 
 void initTime() {
+  Serial.println("Initializing time...");
   time_t now;
 
   gfx.fillBuffer(MINI_BLACK);
@@ -165,11 +167,11 @@ void initTime() {
   int i = 1;
   while ((now = time(nullptr)) < NTP_MIN_VALID_EPOCH) {
     if (i > 80) i = 0;
-    drawProgress(i * 10, "Updating time...");
+    drawProgress(i, "Updating time...");
     Serial.print(".");
     delay(300);
     yield();
-    i++;
+    i += 10;
   }
   drawProgress(100, "Time synchronized");
   Serial.println();
@@ -260,7 +262,7 @@ void setup() {
   // carousel.setFrames(frames, frameCount);
   // carousel.disableAllIndicators();
 
-  initTime();
+  // initTime();
 
   // update the weather information
   updateData();
@@ -384,8 +386,24 @@ bool sleep_mode() {
   return sleeping;  // used to prevent screen changes on wake-up screen press
 }	// sleep_mode()
 
+void printWiFiStatus() {
+  Serial.print("WiFi Status: [" + String(WiFi.status()) + "]");
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.print(" connected ");
+  } else {
+    Serial.print(" non connected status ");
+  }
+
+  Serial.println();
+}
+
 // Update the internet based information and update screen
 void updateData() {
+  Serial.println("Updating data...");
+  printWiFiStatus();
+
+  initTime();
   time_t now = time(nullptr);
 
   gfx.fillBuffer(MINI_BLACK);
@@ -405,9 +423,11 @@ void updateData() {
   forecastClient->setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
   uint8_t allowedHours[] = {12, 0};
   forecastClient->setAllowedHours(allowedHours, sizeof(allowedHours));
-  forecastClient->updateForecastsById(forecasts, OPEN_WEATHER_MAP_API_KEY, OPEN_WEATHER_MAP_LOCATION_ID, MAX_FORECASTS);
+  forecastClient->updateForecastsById(updated_forecasts, OPEN_WEATHER_MAP_API_KEY, OPEN_WEATHER_MAP_LOCATION_ID, MAX_FORECASTS);
   delete forecastClient;
   forecastClient = nullptr;
+
+  Serial.println("Filter forecasts...");
   filterForecasts();
 
   drawProgress(80, "Updating astronomy...");
@@ -427,8 +447,8 @@ void filterForecasts() {
 
   for (uint8_t counter = 0;counter < MAX_FORECASTS;counter++) {
 
-    time_t time = forecasts[counter].observationTime;
-    struct tm * timeinfo = localtime (&time);
+    time_t time = updated_forecasts[counter].observationTime;
+    struct tm * timeinfo = localtime(&time);
 
     // Serial.print("Filtering forecast for index: ");
     // Serial.println(counter);
@@ -442,7 +462,7 @@ void filterForecasts() {
       Serial.print(" ");
       Serial.println(timeinfo->tm_hour);
 
-      localForecasts[localCounter] = forecasts[counter];
+      localForecasts[localCounter] = updated_forecasts[counter];
       localCounter++;
     }
   }
@@ -486,7 +506,7 @@ void drawTime() {
   gfx.setColor(MINI_YELLOW);
   gfx.drawString(xcoord, 0, WDAY_NAMES[timeinfo->tm_wday]);
 
-  xcoord += 30;
+  xcoord += 35;
   gfx.setColor(MINI_WHITE);
   String dateNumber = String(timeinfo->tm_mday);
   uint8_t dateMargin = dateNumber.length() * 7;
@@ -716,6 +736,7 @@ void drawWifiQuality() {
   gfx.setFont(ArialMT_Plain_10);
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
   gfx.drawString(228, 3, String(quality) + "%");
+  gfx.setColor(MINI_YELLOW);
   for (int8_t i = 0; i < 4; i++) {
     for (int8_t j = 0; j < 2 * (i + 1); j++) {
       if (quality > i * 25 || j == 0) {
