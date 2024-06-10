@@ -63,11 +63,12 @@
 #define MAX_FORECASTS 12
 
 // defines the colors usable in the paletted 16 color frame buffer
-uint16_t palette[] = {ILI9341_BLACK, // 0
-                      0xF799, // 1
-                      0xE54E, // 2
-                      0x3BB7
-                     }; //3
+uint16_t palette[] = {
+  ILI9341_BLACK, // 0 - Black
+  0xFFBE, // 1 - White
+  0x2E76, // 2 - Yellow
+  0x5B7B  //3 - Blue
+};
 
 // Limited to 4 colors due to memory constraints
 int BITS_PER_PIXEL = 2; // 2^2 =  4 colors
