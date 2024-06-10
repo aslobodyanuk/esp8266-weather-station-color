@@ -168,7 +168,7 @@ void initTime() {
   while ((now = time(nullptr)) < NTP_MIN_VALID_EPOCH) {
     if (i > 80) i = 0;
     drawProgress(i, "Updating time...");
-    Serial.print(".");
+    Serial.println("initTime: " + String(now));
     delay(300);
     yield();
     i += 10;
@@ -552,14 +552,12 @@ void drawTime() {
 
 // draws current weather information
 void drawCurrentWeather() {
-  uint8_t ycoord = 0; 
-
-  ycoord += 10;
+  
   gfx.setTransparentColor(MINI_BLACK);
-  gfx.drawPalettedBitmapFromPgm(0, ycoord, getMeteoconIconFromProgmem(currentWeather.icon));
+  gfx.drawPalettedBitmapFromPgm(0, 15, getMeteoconIconFromProgmem(currentWeather.icon));
   // Weather Text
 
-  ycoord += 15;
+  uint8_t ycoord = 25;
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setColor(MINI_BLUE);
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
@@ -570,7 +568,7 @@ void drawCurrentWeather() {
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
 
   ycoord += 13;
-  gfx.drawString(220, ycoord, String(currentWeather.temp, 1) + (IS_METRIC ? "°C" : "°F"));
+  gfx.drawString(220, ycoord, String(currentWeather.temp, 0) + (IS_METRIC ? "°C" : "°F"));
 
   ycoord += 40;
   gfx.setFont(ArialRoundedMTBold_14);
