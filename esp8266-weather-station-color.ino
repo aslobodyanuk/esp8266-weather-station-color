@@ -62,6 +62,9 @@
 
 #define MAX_FORECASTS 12
 
+// Generated with Analogous tool from: https://www.canva.com/colors/color-wheel/
+// Converted to hex colors with: http://www.rinkydinkelectronics.com/calc_rgb565.php
+
 // defines the colors usable in the paletted 16 color frame buffer
 uint16_t palette[] = {
   ILI9341_BLACK, // 0 - Black
