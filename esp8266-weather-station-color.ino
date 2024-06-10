@@ -62,6 +62,9 @@
 
 #define MAX_FORECASTS 12
 
+#define NORMAL_TEXT_MARGIN 4
+#define LONG_TEXT_MARGIN NORMAL_TEXT_MARGIN * 3
+
 // Generated with Analogous tool from: https://www.canva.com/colors/color-wheel/
 // Converted to hex colors with: http://www.rinkydinkelectronics.com/calc_rgb565.php
 
@@ -69,8 +72,8 @@
 uint16_t palette[] = {
   ILI9341_BLACK, // 0 - Black
   0xFFBE, // 1 - White
-  0x2E76, // 2 - Yellow
-  0x5B7B  //3 - Blue
+  0xFEE8, // 2 - Yellow
+  0xFC08  //3 - Blue
 };
 
 // Limited to 4 colors due to memory constraints
@@ -498,33 +501,9 @@ void drawTime() {
   char time_str[11];
   time_t now = time(nullptr);
   struct tm * timeinfo = localtime(&now);
+  uint16_t previousTextPixelsLength = 0;
 
-  gfx.setTextAlignment(TEXT_ALIGN_LEFT);
   gfx.setFont(ArialRoundedMTBold_14);
-  gfx.setColor(MINI_WHITE);
-  // String date = WDAY_NAMES[timeinfo->tm_wday] + " " + String(timeinfo->tm_mday) + " " + MONTH_NAMES[timeinfo->tm_mon] + " " + String(1900 + timeinfo->tm_year);
-  // gfx.drawString(120, 0, date);
-
-  uint8_t xcoord = 60;
-
-  gfx.setColor(MINI_YELLOW);
-  gfx.drawString(xcoord, 0, WDAY_NAMES[timeinfo->tm_wday]);
-
-  xcoord += 35;
-  gfx.setColor(MINI_WHITE);
-  String dateNumber = String(timeinfo->tm_mday);
-  uint8_t dateMargin = dateNumber.length() * 7;
-  gfx.drawString(xcoord, 0, dateNumber);
-
-  xcoord += 18 + dateMargin;
-  gfx.setColor(MINI_YELLOW);
-  gfx.drawString(xcoord, 0, MONTH_NAMES[timeinfo->tm_mon]);
-
-  xcoord += 38;
-  gfx.setColor(MINI_WHITE);
-  gfx.drawString(xcoord, 0, String(1900 + timeinfo->tm_year));
-
-  // gfx.setFont(ArialRoundedMTBold_36);
 
   if (IS_STYLE_12HR) {                                                              //12:00
     int hour = (timeinfo->tm_hour + 11) % 12 + 1; // take care of noon and midnight
@@ -541,17 +520,28 @@ void drawTime() {
     }
   }
 
+  uint16_t xcoord = 5;
+
   gfx.setColor(MINI_WHITE);
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
-  gfx.drawString(5, 0, time_str);
+  previousTextPixelsLength = gfx.drawString(xcoord, 0, time_str);
+  
+  xcoord += previousTextPixelsLength + LONG_TEXT_MARGIN;
 
-  // gfx.setTextAlignment(TEXT_ALIGN_LEFT);
-  // gfx.setFont(ArialMT_Plain_10);
-  // gfx.setColor(MINI_BLUE);
-  // if (IS_STYLE_12HR) {
-  //   sprintf(time_str, "\n%s", timeinfo->tm_hour >= 12 ? "PM" : "AM");
-  //   gfx.drawString(195, 27, time_str);
-  // }
+  gfx.setColor(MINI_BLUE);
+  previousTextPixelsLength = gfx.drawString(xcoord, 0, WDAY_NAMES[timeinfo->tm_wday]);
+
+  xcoord += previousTextPixelsLength + NORMAL_TEXT_MARGIN;
+  gfx.setColor(MINI_WHITE);
+  previousTextPixelsLength = gfx.drawString(xcoord, 0, String(timeinfo->tm_mday));
+
+  xcoord += previousTextPixelsLength + LONG_TEXT_MARGIN;
+  gfx.setColor(MINI_YELLOW);
+  previousTextPixelsLength = gfx.drawString(xcoord, 0, MONTH_NAMES[timeinfo->tm_mon]);
+
+  xcoord += previousTextPixelsLength + NORMAL_TEXT_MARGIN;
+  gfx.setColor(MINI_WHITE);
+  previousTextPixelsLength = gfx.drawString(xcoord, 0, String(1900 + timeinfo->tm_year));
 }
 
 // draws current weather information
@@ -618,7 +608,7 @@ void drawForecastDetail(uint16_t x, uint16_t y, uint8_t dayIndex) {
 
   gfx.drawPalettedBitmapFromPgm(x, y + 15, getMiniMeteoconIconFromProgmem(forecasts[dayIndex].icon));
   gfx.setColor(MINI_BLUE);
-  gfx.drawString(x + 25, y + 60, String(forecasts[dayIndex].rain, 1) + (IS_METRIC ? "mm" : "in"));
+  gfx.drawString(x + 25, y + 60, String(forecasts[dayIndex].rain, 1) + (IS_METRIC ? " mm" : " in"));
 }
 
 // draw moonphase, sunrise/set and moonrise/set
@@ -636,29 +626,35 @@ void drawAstronomy() {
   // gfx.setColor(MINI_YELLOW);
   // gfx.drawString(120, 250, MOON_PHASES[moonData.phase.index]);
 
+  uint16_t xcoord = 5;
+  uint16_t previousTextPixelsLength = 0;
+
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
-  // gfx.setColor(MINI_YELLOW);
-  // gfx.drawString(5, 250, SUN_MOON_TEXT[0]);
+
   gfx.setColor(MINI_YELLOW);
   time_t time = currentWeather.sunrise;
-  gfx.drawString(5, 300, "R:");
-  gfx.setColor(MINI_WHITE);
-  gfx.drawString(23, 300, getTime(&time));
+  previousTextPixelsLength = gfx.drawString(xcoord, 300, "R:");
 
-  gfx.setTextAlignment(TEXT_ALIGN_LEFT);
+  xcoord = xcoord + previousTextPixelsLength + NORMAL_TEXT_MARGIN;
+  gfx.setColor(MINI_WHITE);
+  gfx.drawString(xcoord, 300, getTime(&time));
+
   float windSpeed = currentWeather.windSpeed;
-  float windSpeedKmPerHour = windSpeed * 3.6;
+  float windSpeedKmPerHour = windSpeed * 3.6; // Convert to km per hour
   gfx.setColor(MINI_YELLOW);
-  gfx.drawString(85, 300, "W:");
-  gfx.setColor(MINI_WHITE);
-  gfx.drawString(107, 300, String(windSpeedKmPerHour, 0) + "km/h");
+  previousTextPixelsLength = gfx.drawString(85, 300, "W:");
 
-  gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
+  xcoord = 85 + previousTextPixelsLength + NORMAL_TEXT_MARGIN;
+  gfx.setColor(MINI_WHITE);
+  gfx.drawString(xcoord, 300, String(windSpeedKmPerHour, 0) + " km/h");
+
   time = currentWeather.sunset;
   gfx.setColor(MINI_YELLOW);
-  gfx.drawString(195, 300, "S:");
+  previousTextPixelsLength = gfx.drawString(183, 300, "S:");
+
+  xcoord = 183 + previousTextPixelsLength + NORMAL_TEXT_MARGIN;
   gfx.setColor(MINI_WHITE);
-  gfx.drawString(239, 300, getTime(&time));
+  gfx.drawString(xcoord, 300, getTime(&time));
 
   // gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
   // gfx.setColor(MINI_YELLOW);
