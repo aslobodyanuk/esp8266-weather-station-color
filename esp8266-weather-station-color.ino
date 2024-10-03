@@ -497,21 +497,21 @@ void drawCurrentDate() {
   time_t now = time(nullptr);
   struct tm * timeinfo = localtime(&now);
 
-  uint8_t ycoord = 8;
+  uint8_t ycoord = 6;
   uint8_t xcoord = 20;
 
   gfx.setFont(ArialRoundedMTBold_36);
-  gfx.setColor(MINI_BLUE);
+  gfx.setColor(MINI_WHITE);
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
 
   uint16_t previousTextPixelsLength = gfx.drawString(xcoord, ycoord, WDAY_NAMES[timeinfo->tm_wday] + ", ");
 
   xcoord += previousTextPixelsLength;
-  gfx.setColor(MINI_WHITE);
+  gfx.setColor(MINI_BLUE);
   previousTextPixelsLength = gfx.drawString(xcoord, ycoord, String(timeinfo->tm_mday) + " ");
 
   xcoord += previousTextPixelsLength;
-  gfx.setColor(MINI_BLUE);
+  gfx.setColor(MINI_WHITE);
   previousTextPixelsLength = gfx.drawString(xcoord, ycoord, MONTH_NAMES[timeinfo->tm_mon]);
 }
 
