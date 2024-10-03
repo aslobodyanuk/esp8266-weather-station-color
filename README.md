@@ -1,6 +1,6 @@
 # ThingPulse ESP8266 Weather Station Color
 
-# There should be settings.h file and it should look something like this
+## There should be settings.h file and it should look something like this
 
 ```c++
 #ifndef SETTINGS_H
