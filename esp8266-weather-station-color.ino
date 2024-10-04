@@ -498,21 +498,21 @@ void drawCurrentDate() {
   struct tm * timeinfo = localtime(&now);
 
   uint8_t ycoord = 6;
-  uint8_t xcoord = 20;
+  uint8_t xcoord = DISPLAY_WIDTH - DISPLAY_SPACER_MARGIN + 1;
 
   gfx.setFont(ArialRoundedMTBold_36);
   gfx.setColor(MINI_WHITE);
-  gfx.setTextAlignment(TEXT_ALIGN_LEFT);
+  gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
 
-  uint16_t previousTextPixelsLength = gfx.drawString(xcoord, ycoord, WDAY_NAMES[timeinfo->tm_wday] + ", ");
+  uint16_t previousTextPixelsLength = gfx.drawString(xcoord, ycoord, MONTH_NAMES[timeinfo->tm_mon]);
 
-  xcoord += previousTextPixelsLength;
+  xcoord -= previousTextPixelsLength;
   gfx.setColor(MINI_BLUE);
   previousTextPixelsLength = gfx.drawString(xcoord, ycoord, String(timeinfo->tm_mday) + " ");
 
-  xcoord += previousTextPixelsLength;
+  xcoord -= previousTextPixelsLength;
   gfx.setColor(MINI_WHITE);
-  previousTextPixelsLength = gfx.drawString(xcoord, ycoord, MONTH_NAMES[timeinfo->tm_mon]);
+  previousTextPixelsLength = gfx.drawString(xcoord, ycoord, WDAY_NAMES[timeinfo->tm_wday] + ", ");
 }
 
 // draws current weather information
