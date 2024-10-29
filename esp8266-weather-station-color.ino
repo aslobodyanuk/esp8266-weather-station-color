@@ -373,10 +373,11 @@ void updateData() {
   delete forecastClient;
   forecastClient = nullptr;
 
-  Serial.println("Filter forecasts...");
+  drawProgress(80, F("Filtering forecasts..."));
+  Serial.println(F("Filtering forecasts..."));
   filterForecasts();
 
-  drawProgress(80, "Updating astronomy...");
+  drawProgress(90, "Updating astronomy...");
   // 'now' has to be epoch instant, lat/lng in degrees not radians
   SunMoonCalc *smCalc = new SunMoonCalc(now, currentWeather.lat, currentWeather.lon);
   moonData = smCalc->calculateSunAndMoonData().moon;
@@ -390,6 +391,7 @@ void updateData() {
 void filterForecasts() {
   OpenWeatherMapForecastData localForecasts[MAX_FORECASTS];
   uint8_t localCounter = 0;
+  int selectedFilterHour = -1;
 
   time_t time1 = time(nullptr);
   int currentDate = getDate(&time1);
@@ -409,7 +411,12 @@ void filterForecasts() {
       continue;
     }
 
-    if (timeinfo->tm_hour == 14) {
+    if (selectedFilterHour == -1 && timeinfo->tm_hour >= 13 && timeinfo->tm_hour <= 15) {
+      selectedFilterHour = timeinfo->tm_hour;
+      Serial.print("Selected filter hour: " + selectedFilterHour);
+    }
+
+    if (timeinfo->tm_hour == selectedFilterHour) {
 
       Serial.print("Adding forecast day: ");  
       Serial.print(WDAY_NAMES[timeinfo->tm_wday]);
