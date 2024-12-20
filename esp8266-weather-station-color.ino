@@ -71,6 +71,8 @@
 #define NORMAL_TEXT_MARGIN 4
 #define LONG_TEXT_MARGIN NORMAL_TEXT_MARGIN * 3
 
+#define MAX_WEATHER_DESCRIPTION 18
+
 // Generated with Analogous tool from: https://www.canva.com/colors/color-wheel/
 // Converted to hex colors with: http://www.rinkydinkelectronics.com/calc_rgb565.php
 
@@ -363,6 +365,8 @@ void updateData() {
   delete currentWeatherClient;
   currentWeatherClient = nullptr;
 
+  trimWeatherDescription();
+
   drawProgress(70, "Updating forecasts...");
   OpenWeatherMapForecast *forecastClient = new OpenWeatherMapForecast();
   forecastClient->setMetric(IS_METRIC);
@@ -429,6 +433,16 @@ void filterForecasts() {
   }
 
   memcpy(forecasts, localForecasts, sizeof(forecasts));
+}
+
+void trimWeatherDescription() {
+  if (currentWeather.description.length() <= MAX_WEATHER_DESCRIPTION) {
+    return;
+  }
+
+  byte descriptionLength = MAX_WEATHER_DESCRIPTION - 3;
+  String newDescription = currentWeather.description.substring(0, descriptionLength) + "...";
+  currentWeather.description = newDescription;
 }
 
 // Progress bar helper
