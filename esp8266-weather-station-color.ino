@@ -354,9 +354,6 @@ void updateData() {
   initTime();
   time_t now = time(nullptr);
 
-  gfx.fillBuffer(MINI_BLACK);
-  gfx.setFont(ArialRoundedMTBold_14);
-
   drawProgress(50, "Updating conditions...");
   OpenWeatherMapCurrent *currentWeatherClient = new OpenWeatherMapCurrent();
   currentWeatherClient->setMetric(IS_METRIC);
@@ -447,19 +444,24 @@ void trimWeatherDescription() {
 
 // Progress bar helper
 void drawProgress(uint8_t percentage, String text) {
-  gfx.fillBuffer(MINI_BLACK);
-  // gfx.drawPalettedBitmapFromPgm(20, 5, ThingPulseLogo);
+  // Hack to allow fill with MINI_BLACK color, without this the library ignores fill with BLACK
+  gfx.setTransparentColor(5);
+
+  gfx.setColor(MINI_BLACK);
+  int loadingRegionHeight = 32;
+  int loadingBarHeight = 5;
+
+  gfx.fillRect(0, DISPLAY_HEIGHT - loadingRegionHeight - loadingBarHeight, DISPLAY_WIDTH, loadingRegionHeight + loadingBarHeight);
+
+  gfx.setTransparentColor(MINI_BLACK);
+
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
-  // gfx.setColor(MINI_WHITE);
-  // gfx.drawString(120, 90, "https://thingpulse.com");
   gfx.setColor(MINI_YELLOW);
+  gfx.drawString(120, DISPLAY_HEIGHT - 34, text);
 
-  gfx.drawString(120, 146, text);
-  gfx.setColor(MINI_WHITE);
-  gfx.drawRect(10, 168, 240 - 20, 15);
   gfx.setColor(MINI_BLUE);
-  gfx.fillRect(12, 170, 216 * percentage / 100, 11);
+  gfx.fillRect(0, DISPLAY_HEIGHT - loadingBarHeight, DISPLAY_WIDTH * percentage / 100, loadingBarHeight);
 
   gfx.commit();
 }
@@ -598,7 +600,7 @@ void drawForecastDetail(uint16_t x, uint16_t y, uint8_t dayIndex) {
 
   xcoord_date_distance += previousTextPixelsLength2;
   gfx.setColor(MINI_YELLOW);
-  previousTextPixelsLength2 = gfx.drawString(x + xcoord_date_distance, y + 5, MONTH_FULL_NAMES[timeinfo->tm_mon]);
+  previousTextPixelsLength2 = gfx.drawString(x + xcoord_date_distance, y + 5, MONTH_NAMES[timeinfo->tm_mon]);
 
   // xcoord_distance -= 4;
 
