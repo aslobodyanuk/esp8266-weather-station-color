@@ -73,6 +73,7 @@
 
 #define MAX_WEATHER_DESCRIPTION 18
 
+#define USE_FORECAST_FOR_HOUR 12
 // Generated with Analogous tool from: https://www.canva.com/colors/color-wheel/
 // Converted to hex colors with: http://www.rinkydinkelectronics.com/calc_rgb565.php
 
@@ -368,7 +369,7 @@ void updateData() {
   OpenWeatherMapForecast *forecastClient = new OpenWeatherMapForecast();
   forecastClient->setMetric(IS_METRIC);
   forecastClient->setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
-  uint8_t allowedHours[] = {12, 0};
+  uint8_t allowedHours[] = {USE_FORECAST_FOR_HOUR};
   forecastClient->setAllowedHours(allowedHours, sizeof(allowedHours));
   forecastClient->updateForecastsById(updated_forecasts, OPEN_WEATHER_MAP_API_KEY, OPEN_WEATHER_MAP_LOCATION_ID, MAX_FORECASTS);
   delete forecastClient;
@@ -400,26 +401,24 @@ void filterForecasts() {
   for (uint8_t counter = 0;counter < MAX_FORECASTS;counter++) {
 
     time_t time = updated_forecasts[counter].observationTime;
-    struct tm * timeinfo = localtime(&time);
+    struct tm * timeinfo = gmtime(&time);
 
-    // Serial.print("Filtering forecast for index: ");
+    // Serial.print(F("Filtering forecast for index: "));
     // Serial.println(counter);
+    // Serial.print(timeinfo->tm_mday);
+    // Serial.print(" ");
+    // Serial.print(WDAY_NAMES[timeinfo->tm_wday]);
+    // Serial.print(" ");
     // Serial.println(timeinfo->tm_hour);
-    // Serial.println(String(timeinfo->tm_hour));
     
     // Filter out current date
     if (timeinfo->tm_mday == currentDate) {
       continue;
     }
 
-    if (selectedFilterHour == -1 && timeinfo->tm_hour >= 13 && timeinfo->tm_hour <= 15) {
-      selectedFilterHour = timeinfo->tm_hour;
-      Serial.print("Selected filter hour: " + selectedFilterHour);
-    }
+    if (timeinfo->tm_hour == USE_FORECAST_FOR_HOUR) {
 
-    if (timeinfo->tm_hour == selectedFilterHour) {
-
-      Serial.print("Adding forecast day: ");  
+      Serial.print(F("Adding forecast day: "));  
       Serial.print(WDAY_NAMES[timeinfo->tm_wday]);
       Serial.print(" ");
       Serial.println(timeinfo->tm_hour);
